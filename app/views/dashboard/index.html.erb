@@ -1,0 +1,37 @@
+
+<h1>NERV Compliance</h1>
+<p>Kubernetes Security Control Monitoring</p>
+
+<% if @latest_check %>
+  <h2>Latest Assessment</h2>
+
+  <p>
+    <strong>Control:</strong>
+    <%= @latest_check.control.title %>
+  </p>
+
+  <p>
+    <strong>Status:</strong>
+    <%= @latest_check.status.upcase %>
+  </p>
+
+  <p>
+    <strong>Evaluated:</strong>
+    <%= @latest_check.checked_at %>
+  </p>
+
+  <p>
+    <strong>Summary:</strong>
+    <%= @latest_check.details %>
+  </p>
+
+  <h2>Evidence</h2>
+
+  <% @latest_check.evidences.each do |evidence| %>
+    <h3><%= evidence.resource %></h3>
+    <pre><%= JSON.pretty_generate(evidence.payload) %></pre>
+  <% end %>
+<% else %>
+  <p>No compliance assessments have been recorded yet.</p>
+<% end %>
+
