@@ -34,4 +34,3 @@ module Kubernetes
     end
   end
 end
-

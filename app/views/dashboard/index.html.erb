@@ -1,37 +1,168 @@
+<div class="nerv-console">
+  <header class="console-header">
+    <div class="brand">
+      <div class="brand-mark">NERV</div>
+      <div>
+        <div class="eyebrow">SPECIAL SECURITY DIVISION // 01</div>
+        <h1>COMPLIANCE MONITOR</h1>
+        <p>KUBERNETES INTEGRITY SURVEILLANCE SYSTEM</p>
+      </div>
+    </div>
+    <div class="system-label">SYSTEM // ONLINE</div>
+  </header>
 
-<h1>NERV Compliance</h1>
-<p>Kubernetes Security Control Monitoring</p>
+  <div class="hazard-stripe"></div>
 
-<% if @latest_check %>
-  <h2>Latest Assessment</h2>
+  <% if @latest_check %>
+    <% evidence = @latest_check.evidences.to_a %>
+    <% findings = evidence.reject { |e| e.resource == "cluster/pods" } %>
+    <% summary = evidence.find { |e| e.resource == "cluster/pods" } %>
 
-  <p>
-    <strong>Control:</strong>
-    <%= @latest_check.control.title %>
-  </p>
+    
+<section class="section-heading">
+  <span>00 // CONTROL STATUS MATRIX</span>
+  <span><%= @latest_by_control.length %> CONTROLS MONITORED</span>
+</section>
 
-  <p>
-    <strong>Status:</strong>
-    <%= @latest_check.status.upcase %>
-  </p>
+<div class="control-matrix">
+  <% @latest_by_control.each do |check| %>
+    <%= link_to assessment_path(check), class: "control-matrix-item" do %>
+      <div>
+        <span class="eyebrow"><%= check.control.key %></span>
+        <h3><%= check.control.title.upcase %></h3>
+        <span class="matrix-timestamp">
+          LAST SCAN // <%= check.checked_at.utc.strftime("%Y.%m.%d %H:%M") %>
+        </span>
+      </div>
 
-  <p>
-    <strong>Evaluated:</strong>
-    <%= @latest_check.checked_at %>
-  </p>
-
-  <p>
-    <strong>Summary:</strong>
-    <%= @latest_check.details %>
-  </p>
-
-  <h2>Evidence</h2>
-
-  <% @latest_check.evidences.each do |evidence| %>
-    <h3><%= evidence.resource %></h3>
-    <pre><%= JSON.pretty_generate(evidence.payload) %></pre>
+      <span class="status-badge <%= check.status == 'pass' ? 'passed' : 'failed' %>">
+        <%= check.status.upcase %>
+      </span>
+    <% end %>
   <% end %>
-<% else %>
-  <p>No compliance assessments have been recorded yet.</p>
+</div>
+
+    <section class="section-heading">
+      <span>01 // SECURITY ASSESSMENT</span>
+      <span>SCAN #<%= @latest_check.id %></span>
+    </section>
+
+    <div class="metrics-grid">
+      <div class="metric-card">
+        <span class="metric-label">PODS SCANNED</span>
+        <strong><%= summary&.payload&.dig("pods_scanned") || "—" %></strong>
+        <span class="metric-footer">KUBERNETES CLUSTER</span>
+      </div>
+
+      <div class="metric-card">
+        <span class="metric-label">CONTROL STATUS</span>
+        <strong class="<%= @latest_check.status == 'pass' ? 'good' : 'danger' %>">
+          <%= @latest_check.status.upcase %>
+        </strong>
+        <span class="metric-footer"><%= @latest_check.control.key %></span>
+      </div>
+
+      <div class="metric-card">
+        <span class="metric-label">DETECTED FINDINGS</span>
+        <strong class="danger"><%= findings.length.to_s.rjust(3, "0") %></strong>
+        <span class="metric-footer">EVIDENCE RECORDS</span>
+      </div>
+    </div>
+
+    <section class="section-heading">
+      <span>02 // CONTROL EVALUATION</span>
+      <span><%= @latest_check.checked_at&.utc&.strftime("%Y.%m.%d // %H:%M UTC") %></span>
+    </section>
+
+    <div class="control-panel">
+      <div class="control-header">
+        <div>
+          <span class="eyebrow"><%= @latest_check.control.key %></span>
+          <h2><%= @latest_check.control.title.upcase %></h2>
+          <p class="eyebrow">
+  ASSESSMENT #<%= @latest_check.id %>
+          </p>
+          <% if params[:id].present? %>
+  <%= link_to "← RETURN TO LATEST",
+      root_path,
+      class: "history-link" %>
 <% end %>
+        </div>
+        <span class="status-badge <%= @latest_check.status == 'pass' ? 'passed' : 'failed' %>">
+          <%= @latest_check.status.upcase %>
+        </span>
+      </div>
+
+      <section class="section-heading">
+  <span>03 // ASSESSMENT HISTORY</span>
+  <span>LAST 10 EVALUATIONS</span>
+</section>
+
+<div class="history-panel">
+  <table class="history-table">
+    <thead>
+      <tr>
+        <th>SCAN ID</th>
+        <th>CONTROL</th>
+        <th>STATUS</th>
+        <th>EVALUATED</th>
+      </tr>
+    </thead>
+    <tbody>
+      <% @recent_checks.each do |check| %>
+        <tr>
+          <td>
+            <%= link_to "##{check.id}",
+                assessment_path(check),
+                class: "history-link",
+                data: { turbo: false } %>
+          </td>
+          <td><%= check.control.key %> / <%= check.control.title %></td>
+          <td class="<%= check.status == 'pass' ? 'good' : 'danger' %>">
+            <%= check.status.upcase %>
+          </td>
+          <td><%= check.checked_at.utc.strftime("%Y.%m.%d %H:%M") %></td>
+        </tr>
+      <% end %>
+    </tbody>
+  </table>
+</div>
+
+      <p class="control-description"><%= @latest_check.details %></p>
+
+      <div class="findings-header">
+        <span>RESOURCE / CONTAINER</span>
+        <span>STATUS</span>
+      </div>
+
+      <% if findings.any? %>
+        <% findings.each do |finding| %>
+          <details class="finding">
+            <summary>
+              <span>
+                <span class="finding-icon">!</span>
+                <%= finding.resource %>
+
+                <% if finding.payload&.dig("container") %>
+                  / <%= finding.payload["container"] %>
+                <% end %>
+              </span>
+              <span class="finding-status">FLAGGED +</span>
+            </summary>
+            <pre><%= JSON.pretty_generate(finding.payload) %></pre>
+          </details>
+        <% end %>
+      <% else %>
+        <div class="no-findings">NO VIOLATIONS RECORDED</div>
+      <% end %>
+    </div>
+  <% else %>
+    <div class="empty-state">AWAITING INITIAL SECURITY ASSESSMENT</div>
+  <% end %>
+
+  <footer class="console-footer">
+    <span>NERV // INTERNAL USE ONLY</span>
+    <span>COMPLIANCE MONITOR / REV 001</span>
+  </footer>
+</div>
 

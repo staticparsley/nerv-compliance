@@ -1,11 +1,1 @@
-# Read about fixtures at https://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
-
-one:
-  check: one
-  resource: MyString
-  payload: 
-
-two:
-  check: two
-  resource: MyString
-  payload: 
+# Test fixtures will be added alongside model tests.

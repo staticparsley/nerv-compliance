@@ -41,4 +41,3 @@ module Compliance
     end
   end
 end
-

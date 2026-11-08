@@ -1,15 +1,1 @@
-# Read about fixtures at https://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
-
-one:
-  control: one
-  integration: one
-  status: MyString
-  checked_at: 2026-11-07 18:11:01
-  details: MyText
-
-two:
-  control: two
-  integration: two
-  status: MyString
-  checked_at: 2026-11-07 18:11:01
-  details: MyText
+# Test fixtures will be added alongside model tests.
