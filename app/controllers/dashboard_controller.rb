@@ -16,6 +16,10 @@ class DashboardController < ApplicationController
   private
 
   def load_overview
+    @open_findings_count = Finding.open_findings.count
+    @accepted_risks_count = Finding.accepted_risks.count
+    @latest_scan = Scan.recent.first
+    @active_scan = Scan.active.first
     @recent_checks = Check
       .includes(:control, :integration, :evidences)
       .order(checked_at: :desc, id: :desc)

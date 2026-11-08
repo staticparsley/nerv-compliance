@@ -1,4 +1,8 @@
 Rails.application.routes.draw do
+  resources :findings, only: [ :index, :show ] do
+    resources :risk_acceptances, only: :create
+  end
+  resources :scans, only: [ :index, :show, :create ]
   get "dashboard/index"
   # Define your application routes per the DSL in https://guides.rubyonrails.org/routing.html
 

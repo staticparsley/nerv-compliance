@@ -12,6 +12,38 @@
   </header>
 
   <div class="hazard-stripe"></div>
+  <%= render "shared/scan_navigation" %>
+  <section class="control-header">
+    <div>
+      <% if @latest_scan %>
+        <%= link_to "LATEST SCAN ##{@latest_scan.id}", scan_path(@latest_scan), class: "history-link" %>
+        <span class="status-badge <%= execution_class(@latest_scan) %>"><%= @latest_scan.execution_label %></span>
+        <p class="matrix-timestamp">LATEST ACTIVITY // <%= scan_time(@latest_scan.completed_at || @latest_scan.started_at || @latest_scan.created_at) %></p>
+      <% else %>
+        <p class="eyebrow">AWAITING FIRST SCAN // HISTORICAL ASSESSMENTS RETAINED</p>
+      <% end %>
+    </div>
+    <div>
+      <%= button_to "Run Assessment", scans_path, method: :post, class: "assessment-button",
+          disabled: !manual_scans_enabled? || @active_scan.present?,
+          form: { data: { turbo_submits_with: "Submitting…" } } %>
+      <% if @active_scan %>
+        <p class="eyebrow"><%= link_to "#{@active_scan.execution_label} // ##{@active_scan.id}", scan_path(@active_scan), class: "history-link" %></p>
+      <% elsif !manual_scans_enabled? %>
+        <p class="eyebrow">MANUAL SCANS DISABLED // OPERATOR ACCESS REQUIRED</p>
+      <% else %>
+        <p class="eyebrow">OPERATOR AUTHENTICATION REQUIRED</p>
+      <% end %>
+    </div>
+  </section>
+
+
+  <section class="section-heading"><span>FINDING LIFECYCLE // SEPARATE FROM RAW CONTROL RESULTS</span></section>
+  <div class="metrics-grid finding-counts">
+    <div class="metric-card"><span class="metric-label">OPEN FINDINGS</span><strong class="danger"><%= @open_findings_count %></strong><%= link_to "VIEW OPEN", findings_path(status: "open"), class: "history-link" %></div>
+    <div class="metric-card"><span class="metric-label">ACCEPTED RISKS</span><strong class="accepted-text"><%= @accepted_risks_count %></strong><%= link_to "VIEW ACCEPTED", findings_path(status: "accepted_risk"), class: "history-link" %></div>
+  </div>
+  <p class="eyebrow">FINDINGS TRACK NEW EVALUATIONS. ACCEPTANCE NEVER CHANGES RAW CHECK FAILURES.</p>
 
   <% if @latest_check %>
     <% evidence = @latest_check.evidences.to_a %>
@@ -35,7 +67,7 @@
         </span>
       </div>
 
-      <span class="status-badge <%= check.status == 'pass' ? 'passed' : 'failed' %>">
+      <span class="status-badge <%= check.status == 'error' ? 'execution-error' : (check.status == 'pass' ? 'passed' : 'failed') %>">
         <%= check.status.upcase %>
       </span>
     <% end %>
@@ -88,7 +120,7 @@
       class: "history-link" %>
 <% end %>
         </div>
-        <span class="status-badge <%= @latest_check.status == 'pass' ? 'passed' : 'failed' %>">
+        <span class="status-badge <%= @latest_check.status == 'error' ? 'execution-error' : (@latest_check.status == 'pass' ? 'passed' : 'failed') %>">
           <%= @latest_check.status.upcase %>
         </span>
       </div>

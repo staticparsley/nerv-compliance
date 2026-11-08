@@ -1,0 +1,35 @@
+<div class="nerv-console">
+  <header class="console-header"><div class="brand-mark">NERV</div><h1>SCAN #<%= @scan.id %></h1></header>
+  <div class="hazard-stripe"></div>
+  <%= render "shared/scan_navigation" %>
+  <section class="control-header">
+    <div>
+      <p>QUEUED / CREATED // <%= scan_time(@scan.created_at) %></p>
+      <p>STARTED // <%= scan_time(@scan.started_at) %></p>
+      <p>COMPLETED // <%= scan_time(@scan.completed_at) %></p>
+    </div>
+    <span class="status-badge <%= execution_class(@scan) %>"><%= @scan.execution_label %></span>
+  </section>
+  <% if @scan.error_message.present? %><p class="execution-message" role="alert"><%= @scan.error_message %></p><% end %>
+  <% if Scan::ACTIVE_STATUSES.include?(@scan.status) %>
+    <p class="eyebrow">ASSESSMENT IN PROGRESS // <%= link_to "REFRESH STATUS", scan_path(@scan), class: "history-link" %></p>
+  <% end %>
+  <% @checks.each do |check| %>
+    <section class="control-panel">
+      <header class="control-header">
+        <div><h2><%= check.control.key %> // <%= check.control.title %></h2>
+          <%= link_to "ASSESSMENT ##{check.id}", assessment_path(check), class: "history-link" %>
+        </div>
+        <span class="status-badge <%= check.status == 'error' ? 'execution-error' : (check.status == 'pass' ? 'passed' : 'failed') %>"><%= check.status.upcase %></span>
+      </header>
+      <p class="control-description"><%= check.details %></p>
+      <% if check.status == "error" %><p class="execution-message">EVALUATION UNAVAILABLE // COMPLIANCE UNKNOWN</p><% end %>
+      <% check.evidences.each do |evidence| %>
+        <details class="finding">
+          <summary><%= evidence.resource %><span class="eyebrow">EVIDENCE +</span></summary>
+          <pre><%= JSON.pretty_generate(evidence.payload) %></pre>
+        </details>
+      <% end %>
+    </section>
+  <% end %>
+</div>

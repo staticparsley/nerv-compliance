@@ -321,3 +321,31 @@ h1 {
   }
 }
 
+
+/* Execution errors (orange) are distinct from compliance failures (red). */
+.execution-error { color: var(--orange); border: 2px dashed var(--orange); }
+.execution-message { color: var(--orange); padding: 18px 24px; }
+.pending { color: var(--muted); border: 2px solid var(--muted); }
+.assessment-button {
+  background: var(--panel);
+  color: var(--orange);
+  border: 2px solid var(--orange);
+  padding: 12px 18px;
+  font: bold 14px "Courier New", monospace;
+  cursor: pointer;
+}
+.assessment-button:disabled { opacity: 0.45; cursor: not-allowed; }
+.history-table .status-badge { display: inline-block; white-space: nowrap; }
+
+.accepted-risk { color: #aab8ff; border: 2px solid #aab8ff; }
+.accepted-text { color: #aab8ff; }
+.finding-counts { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.finding-filters { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; margin: 24px 0; }
+.finding-filters input, .finding-filters select, .risk-form input, .risk-form textarea {
+  background: var(--panel); color: var(--text); border: 1px solid var(--line); padding: 10px; font: inherit;
+}
+.risk-form { display: grid; gap: 12px; max-width: 700px; margin: 24px 0; }
+.audit-reason { white-space: pre-wrap; }
+@media (max-width: 700px) { .finding-counts { grid-template-columns: 1fr; } }
+
+nav[aria-label="Assessments"] { flex-wrap: wrap; }

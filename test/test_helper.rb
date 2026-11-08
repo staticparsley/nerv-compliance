@@ -4,8 +4,9 @@ require "rails/test_help"
 
 module ActiveSupport
   class TestCase
-    # Run tests in parallel with specified workers
-    parallelize(workers: :number_of_processors)
+    # macOS's native pg/libpq stack can crash when Rails forks test workers.
+    # Linux CI keeps process parallelism; PARALLEL_WORKERS can override either default.
+    parallelize(workers: RUBY_PLATFORM.include?("darwin") ? 1 : :number_of_processors)
 
     # Setup all fixtures in test/fixtures/*.yml for all tests in alphabetical order.
     fixtures :all

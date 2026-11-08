@@ -26,12 +26,20 @@ module Compliance
     end
 
     # Returns the execution; compliance outcomes live on scan.checks.
-    def call
-      integration = Integration.find_or_create_by!(
-        name: "NERV Kubernetes",
-        provider: "kubernetes"
-      )
-      scan = integration.scans.create!(status: "running", started_at: Time.current)
+    def call(scan: nil)
+      if scan
+        # Duplicate deliveries must not repeat an execution or its evidence.
+        claimed = Scan.where(id: scan.id, status: "queued").update_all(
+          status: "running", started_at: Time.current, updated_at: Time.current
+        )
+        return scan.reload unless claimed == 1
+        scan.reload
+      else
+        scan, created = Scan.reserve(status: "running")
+        return scan unless created
+      end
+      owned = true
+      integration = scan.integration
       errors = []
 
       begin
@@ -50,7 +58,7 @@ module Compliance
         begin
           raise acquisition_error if acquisition_error
           result = definition[:evaluator].new(pods: pods).call
-          persist_result(scan, control, result)
+          persist_result(scan, control, result, pods)
         rescue StandardError => error
           # Roll back incomplete evidence before recording an unknown outcome.
           message = "#{definition[:key]}: #{error.class}"
@@ -71,13 +79,13 @@ module Compliance
     rescue StandardError => error
       # Persistence failures must remain visible to the caller.
       scan&.update!(status: "error", completed_at: Time.current,
-                    error_message: "Scan interrupted (#{error.class})")
+                    error_message: "Scan interrupted (#{error.class})") if owned
       raise
     end
 
     private
 
-    def persist_result(scan, control, result)
+    def persist_result(scan, control, result, pods)
       Check.transaction(requires_new: true) do
         check = Check.create!(
           scan: scan, control: control,
@@ -102,6 +110,7 @@ module Compliance
             payload: violation
           )
         end
+        FindingReconciler.new(check: check, pods: pods).call
       end
     end
   end

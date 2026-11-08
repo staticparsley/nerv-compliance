@@ -1,0 +1,38 @@
+<div class="nerv-console">
+  <header class="console-header"><div class="brand-mark">NERV</div><h1>FINDING MANAGEMENT</h1></header>
+  <div class="hazard-stripe"></div>
+  <%= render "shared/scan_navigation" %>
+  <p class="eyebrow">CURRENT FINDINGS // RAW CHECK RESULTS REMAIN UNCHANGED</p>
+  <%= form_with url: findings_path, method: :get, class: "finding-filters" do |form| %>
+    <%= form.label :status, "Status" %>
+    <%= form.select :status, [["Open", "open"], ["Accepted risks", "accepted_risk"], ["Resolved", "resolved"], ["All", "all"]], selected: @status %>
+    <%= form.label :control_id, "Control" %>
+    <%= form.select :control_id, @controls.map { |control| [control.key, control.id] }, include_blank: "All controls", selected: params[:control_id] %>
+    <%= form.label :namespace, "Namespace" %>
+    <%= form.text_field :namespace, value: params[:namespace] %>
+    <%= form.submit "Filter", class: "assessment-button" %>
+  <% end %>
+  <div class="history-panel">
+    <table class="history-table">
+      <thead><tr><th>FINDING</th><th>CONTROL</th><th>RESOURCE / CONTAINER</th><th>STATUS</th><th>FIRST OBSERVED</th><th>LAST OBSERVED</th></tr></thead>
+      <tbody>
+        <% @findings.each do |finding| %>
+          <tr>
+            <td><%= link_to "##{finding.id}", finding_path(finding), class: "history-link" %></td>
+            <td><%= finding.control.key %></td>
+            <td><%= finding.namespace %>/<%= finding.pod %> / <%= finding.container %></td>
+            <td><span class="status-badge <%= finding_status_class(finding) %>"><%= finding.status.humanize.upcase %></span></td>
+            <td><%= scan_time(finding.first_observed_at) %></td>
+            <td><%= scan_time(finding.last_observed_at) %></td>
+          </tr>
+        <% end %>
+      </tbody>
+    </table>
+    <% if @findings.empty? %><p class="empty-state">NO FINDINGS MATCH THESE FILTERS // THIS DOES NOT ESTABLISH CLUSTER COMPLIANCE</p><% end %>
+  </div>
+  <nav class="section-heading" aria-label="Finding pages">
+    <% filters = {status: @status, control_id: params[:control_id], namespace: params[:namespace]} %>
+    <% if @page > 1 %><%= link_to "← NEWER", findings_path(**filters, page: @page - 1), class: "history-link" %><% end %>
+    <% if @more %><%= link_to "OLDER →", findings_path(**filters, page: @page + 1), class: "history-link" %><% end %>
+  </nav>
+</div>

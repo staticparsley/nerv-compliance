@@ -1,0 +1,30 @@
+<div class="nerv-console">
+  <header class="console-header"><div class="brand-mark">NERV</div><h1>SCAN OPERATIONS</h1></header>
+  <div class="hazard-stripe"></div>
+  <%= render "shared/scan_navigation" %>
+  <p class="eyebrow">EXECUTION STATUS IS SEPARATE FROM CONTROL COMPLIANCE</p>
+  <div class="history-panel">
+    <table class="history-table">
+      <thead><tr><th>SCAN</th><th>STARTED</th><th>COMPLETED</th><th>EXECUTION</th><th>PASS</th><th>FAIL</th><th>ERROR</th></tr></thead>
+      <tbody>
+        <% @scans.each do |scan| %>
+          <tr>
+            <td><%= link_to "##{scan.id}", scan_path(scan), class: "history-link" %></td>
+            <td><%= scan_time(scan.started_at) %></td>
+            <td><%= scan_time(scan.completed_at) %></td>
+            <td><span class="status-badge <%= execution_class(scan) %>"><%= scan.execution_label %></span></td>
+            <% %w[pass fail error].each do |status| %>
+              <td><%= scan.checks.count { |check| check.status == status } %></td>
+            <% end %>
+          </tr>
+        <% end %>
+      </tbody>
+    </table>
+    <% if @scans.empty? %><p class="empty-state">NO SCANS RECORDED</p><% end %>
+  </div>
+  <nav class="section-heading" aria-label="Scan pages">
+    <% if @page > 1 %><%= link_to "← NEWER", scans_path(page: @page - 1), class: "history-link" %><% end %>
+    <% if @more %><%= link_to "OLDER →", scans_path(page: @page + 1), class: "history-link" %><% end %>
+  </nav>
+  <p class="control-description">Historical assessments remain available through the dashboard's assessment history.</p>
+</div>

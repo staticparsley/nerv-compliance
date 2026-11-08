@@ -30,7 +30,10 @@ module Kubernetes
         raise "Kubernetes API request failed: HTTP #{response.code}"
       end
 
-      JSON.parse(response.body).fetch("items")
+      body = JSON.parse(response.body)
+      # Never resolve findings against a truncated snapshot.
+      raise "Incomplete Kubernetes pod list" if body.dig("metadata", "continue").present?
+      body.fetch("items")
     end
   end
 end

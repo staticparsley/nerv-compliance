@@ -1,0 +1,7 @@
+<nav class="section-heading" aria-label="Assessments">
+  <%= link_to "NERV // DASHBOARD", root_path, class: "history-link" %>
+  <%= link_to "FINDINGS", findings_path, class: "history-link" %>
+  <%= link_to "SCAN HISTORY", scans_path, class: "history-link" %>
+</nav>
+<% if notice %><p class="good" role="status"><%= notice %></p><% end %>
+<% if alert %><p class="danger" role="alert"><%= alert %></p><% end %>

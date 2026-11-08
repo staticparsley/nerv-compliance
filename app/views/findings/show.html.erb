@@ -1,0 +1,59 @@
+<div class="nerv-console">
+  <header class="console-header"><div class="brand-mark">NERV</div><h1>FINDING #<%= @finding.id %></h1></header>
+  <div class="hazard-stripe"></div>
+  <%= render "shared/scan_navigation" %>
+  <section class="control-panel">
+    <header class="control-header">
+      <div><h2><%= @finding.control.key %> // <%= @finding.control.title %></h2>
+        <p><%= @finding.namespace %>/<%= @finding.pod %> / <%= @finding.container %></p>
+      </div>
+      <span class="status-badge <%= finding_status_class(@finding) %>"><%= @finding.status.humanize.upcase %></span>
+    </header>
+    <div class="control-description">
+      <p>POD UID // <%= @finding.pod_uid.presence || "Unavailable — identity uses resource name" %></p>
+      <p>FIRST OBSERVED // <%= scan_time(@finding.first_observed_at) %></p>
+      <p>LAST OBSERVED // <%= scan_time(@finding.last_observed_at) %></p>
+      <p>RESOLVED // <%= scan_time(@finding.resolved_at) %></p>
+      <p>Status reflects the last successful evaluation of this control. Failed evaluations do not resolve findings.</p>
+      <% if @finding.current_risk_acceptance %>
+        <p class="eyebrow">LATEST ACCEPTANCE EXPIRES // <%= @finding.current_risk_acceptance.expires_on %> AT 00:00 UTC
+          <% unless @finding.current_risk_acceptance.active? %> // EXPIRED — VIOLATION IS OPEN<% end %>
+        </p>
+      <% end %>
+    </div>
+  </section>
+
+  <section class="section-heading"><span>RISK ACCEPTANCE // AUDITED OPERATOR DECISION</span></section>
+  <p>Acceptance does not change scan outcomes or remove evidence. System namespaces receive no automatic exemption.</p>
+  <% if @finding.resolved_at %>
+    <p class="eyebrow">RESOLVED FINDINGS CANNOT BE ACCEPTED</p>
+  <% elsif manual_scans_enabled? %>
+    <%= form_with url: finding_risk_acceptances_path(@finding), scope: :risk_acceptance, class: "risk-form" do |form| %>
+      <%= form.label :reason, "Reason and compensating measures" %>
+      <%= form.text_area :reason, required: true, maxlength: 5000, rows: 4 %>
+      <%= form.label :expires_on, "Expiration date (00:00 UTC at start of this date)" %>
+      <%= form.date_field :expires_on, required: true, min: Time.current.utc.to_date.tomorrow.iso8601 %>
+      <%= form.submit "Record Risk Acceptance", class: "assessment-button" %>
+    <% end %>
+  <% else %>
+    <p class="eyebrow">RISK ACCEPTANCE DISABLED // OPERATOR ACCESS REQUIRED</p>
+  <% end %>
+  <% @acceptances.each do |acceptance| %>
+    <section class="control-panel">
+      <header class="control-header"><span><%= acceptance.accepted_by %> // <%= scan_time(acceptance.accepted_at) %></span><span>EXPIRES // <%= acceptance.expires_on %> 00:00 UTC</span></header>
+      <p class="control-description audit-reason"><%= acceptance.reason %></p>
+    </section>
+  <% end %>
+
+  <section class="section-heading"><span>OBSERVATION HISTORY // LATEST 50</span></section>
+  <% @observations.each do |observation| %>
+    <% evidence = observation.evidence; check = evidence.check %>
+    <details class="finding">
+      <summary><span><%= scan_time(observation.observed_at) %> // CHECK #<%= check.id %> // <%= check.status.upcase %></span>
+        <%= link_to "VIEW SCAN ##{check.scan_id}", scan_path(check.scan_id), class: "history-link" if check.scan_id %>
+        <%= link_to "ASSESSMENT", assessment_path(check), class: "history-link" %>
+      </summary>
+      <pre><%= JSON.pretty_generate(evidence.payload) %></pre>
+    </details>
+  <% end %>
+</div>

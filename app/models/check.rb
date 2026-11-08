@@ -8,4 +8,8 @@ class Check < ApplicationRecord
   validates :status, inclusion: {
     in: %w[pass fail error]
   }
+
+  def readonly?
+    persisted? || super
+  end
 end

@@ -1,15 +1,18 @@
-# examples:
-#   periodic_cleanup:
-#     class: CleanSoftDeletedRecordsJob
-#     queue: background
-#     args: [ 1000, { batch_size: 500 } ]
-#     schedule: every hour
-#   periodic_cleanup_with_command:
-#     command: "SoftDeletedRecord.due.delete_all"
-#     priority: 2
-#     schedule: at 5am every day
+# bin/jobs runs the scheduler as well as workers. Restart it after changes.
+<% if ENV.fetch("NERV_SCHEDULED_SCANS_ENABLED", "true") == "true" %>
+assessments: &assessments
+  compliance_assessment:
+    class: ScheduledAssessmentJob
+    schedule: <%= ENV.fetch("NERV_SCAN_SCHEDULE", "every 6 hours").to_json %>
+<% else %>
+assessments: &assessments {}
+<% end %>
+
+development:
+  <<: *assessments
 
 production:
+  <<: *assessments
   clear_solid_queue_finished_jobs:
     command: "SolidQueue::Job.clear_finished_in_batches(sleep_between_batches: 0.3)"
     schedule: every hour at minute 12
