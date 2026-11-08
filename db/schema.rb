@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_11_07_231103) do
+ActiveRecord::Schema[8.1].define(version: 2026_11_08_040000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -22,8 +22,10 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_07_231103) do
     t.text "details"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.bigint "scan_id"
     t.index ["control_id"], name: "index_checks_on_control_id"
     t.index ["integration_id"], name: "index_checks_on_integration_id"
+    t.index ["scan_id"], name: "index_checks_on_scan_id"
   end
 
   create_table "controls", force: :cascade do |t|
@@ -50,7 +52,20 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_07_231103) do
     t.datetime "updated_at", null: false
   end
 
+  create_table "scans", force: :cascade do |t|
+    t.bigint "integration_id", null: false
+    t.string "status", default: "running"
+    t.datetime "started_at"
+    t.datetime "completed_at"
+    t.text "error_message"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["integration_id"], name: "index_scans_on_integration_id"
+  end
+
   add_foreign_key "checks", "controls"
   add_foreign_key "checks", "integrations"
+  add_foreign_key "checks", "scans"
   add_foreign_key "evidences", "checks"
+  add_foreign_key "scans", "integrations"
 end

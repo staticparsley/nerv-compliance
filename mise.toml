@@ -1,0 +1,3 @@
+# Use the existing .ruby-version as the project runtime source of truth.
+[settings]
+idiomatic_version_file_enable_tools = ["ruby"]

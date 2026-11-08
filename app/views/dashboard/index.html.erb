@@ -64,7 +64,7 @@
 
       <div class="metric-card">
         <span class="metric-label">DETECTED FINDINGS</span>
-        <strong class="danger"><%= findings.length.to_s.rjust(3, "0") %></strong>
+        <strong class="danger"><%= @latest_check.status == "error" ? "—" : findings.length.to_s.rjust(3, "0") %></strong>
         <span class="metric-footer">EVIDENCE RECORDS</span>
       </div>
     </div>
@@ -135,7 +135,9 @@
         <span>STATUS</span>
       </div>
 
-      <% if findings.any? %>
+      <% if @latest_check.status == "error" %>
+        <div class="no-findings">EVALUATION UNAVAILABLE // COMPLIANCE UNKNOWN</div>
+      <% elsif findings.any? %>
         <% findings.each do |finding| %>
           <details class="finding">
             <summary>

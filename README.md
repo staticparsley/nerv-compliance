@@ -1,24 +1,47 @@
-# README
+# NERV Compliance
 
-This README would normally document whatever steps are necessary to get the
-application up and running.
+A Rails application for monitoring Kubernetes security compliance.
 
-Things you may want to cover:
+## Local Ruby setup
 
-* Ruby version
+Use Ruby 4.0.9 from `.ruby-version` and Bundler 4.0.20 from `Gemfile.lock`.
+The project `mise.toml` enables mise to read `.ruby-version`, overriding a
+global Ruby selection such as `latest`.
 
-* System dependencies
+From this directory:
 
-* Configuration
+```sh
+mise trust
+mise install
+mise exec -- ruby -v
+mise exec -- bundle -v
+mise exec -- bundle install
+mise exec -- bin/rails db:migrate
+mise exec -- bin/rails server
+```
 
-* Database creation
+PostgreSQL must be running with the connection settings in `config/database.yml`.
 
-* Database initialization
+For plain `ruby`, `bundle`, and `bin/rails` commands in zsh, put
+`eval "$(mise activate zsh)"` after other PATH changes in `~/.zshrc`.
+For an already-open terminal, run:
 
-* How to run the test suite
+```sh
+eval "$(mise activate zsh)"
+cd .
+mise exec -- ruby -v
+```
 
-* Services (job queues, cache servers, search engines, etc.)
+If the shell still selects macOS Ruby 2.6, use the explicit `mise exec --`
+commands above. Keep the Gemfile's Windows/JRuby platform declarations intact;
+run Bundler through the intended Ruby rather than macOS's system Bundler.
 
-* Deployment instructions
+## Checks
 
-* ...
+```sh
+mise exec -- bin/rails db:test:prepare test
+mise exec -- bin/rubocop
+```
+
+Evaluator and scan lifecycle tests use synthetic pods and require no live
+Kubernetes connection.
